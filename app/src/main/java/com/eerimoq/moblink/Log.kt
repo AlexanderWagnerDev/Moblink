@@ -8,7 +8,7 @@ class Logger {
 
     fun log(message: String) {
         Log.i("Moblink", message)
-        if (log.size > 100000) {
+        if (log.size > 1000) {
             log.removeFirst()
         }
         val timestamp = LocalDateTime.now()
