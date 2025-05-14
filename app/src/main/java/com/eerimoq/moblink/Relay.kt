@@ -281,7 +281,6 @@ class Relay {
             return
         }
         streamerSocket = DatagramSocket()
-        streamerSocket?.soTimeout = 30 * 1000
         destinationSocket = DatagramSocket()
         destinationSocket?.soTimeout = 30 * 1000
         destinationNetwork?.bindSocket(destinationSocket)
