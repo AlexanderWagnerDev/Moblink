@@ -76,15 +76,11 @@ class MainActivity : ComponentActivity() {
     private var cellularNetwork: Network? = null
     private var ethernetNetwork: Network? = null
     private var showingNotificationsNotAllowedDialog = mutableStateOf(false)
+    private var requestPermissionCompletion: ((isGranted: Boolean) -> Unit)? = null
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
             ->
-            if (!isGranted) {
-                logger.log("Notification permissions not granted. Stopping.")
-                stopAutomatic()
-                stopRelays()
-                showingNotificationsNotAllowedDialog.value = true
-            }
+            requestPermissionCompletion?.invoke(isGranted)
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,17 +109,22 @@ class MainActivity : ComponentActivity() {
         requestNetwork(NetworkCapabilities.TRANSPORT_ETHERNET, createEthernetNetworkRequest())
     }
 
-    private fun requestNotificationPermission() {
+    private fun requestNotificationPermission(completion: (Boolean) -> Unit) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            completion(true)
             return
         }
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED -> {}
+                PackageManager.PERMISSION_GRANTED -> {
+                    completion(true)
+                }
             shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                requestPermissionCompletion = completion
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
             else -> {
+                requestPermissionCompletion = completion
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
@@ -143,20 +144,26 @@ class MainActivity : ComponentActivity() {
             return
         }
         automaticStarted = true
-        automaticButtonText.value = "Stop"
-        startService(this)
-        wakeLock.acquire()
-        scanner =
-            Scanner(
-                getSystemService(Context.NSD_SERVICE) as NsdManager,
-                { streamerName, streamerUrl ->
-                    runOnUiThread { handleStreamerFound(streamerName, streamerUrl) }
-                },
-                { streamerName -> runOnUiThread { handleStreamerLost(streamerName) } },
-            )
-        scanner?.start()
-        requestNotificationPermission()
-        updateAutomaticStatus()
+        requestNotificationPermission(completion = { isGranted: Boolean ->
+                if (isGranted) {
+                    automaticButtonText.value = "Stop"
+                    startService(this)
+                    wakeLock.acquire()
+                    scanner =
+                        Scanner(
+                            getSystemService(Context.NSD_SERVICE) as NsdManager,
+                            { streamerName, streamerUrl ->
+                                runOnUiThread { handleStreamerFound(streamerName, streamerUrl) }
+                            },
+                            { streamerName -> runOnUiThread { handleStreamerLost(streamerName) } },
+                        )
+                    scanner?.start()
+                    updateAutomaticStatus()
+                } else {
+                    stopAutomatic()
+                    showingNotificationsNotAllowedDialog.value = true
+                }
+        })
     }
 
     private fun stopAutomatic() {
@@ -265,12 +272,18 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startRelayManual(relay: Relay) {
-        if (!isStartedManual()) {
-            startService(this)
-            wakeLock.acquire()
-        }
-        relay.start()
-        requestNotificationPermission()
+        requestNotificationPermission(completion = { isGranted: Boolean ->
+            if (isGranted) {
+                if (!isStartedManual()) {
+                    startService(this)
+                    wakeLock.acquire()
+                }
+                relay.start()
+            } else {
+                stopRelayManual(relay)
+                showingNotificationsNotAllowedDialog.value = true
+            }
+        })
     }
 
     private fun stopRelayManual(relay: Relay) {
