@@ -60,7 +60,9 @@ import com.eerimoq.moblink.ui.theme.MoblinkTheme
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.Manifest
+import android.app.AlertDialog
 import android.os.Build
+import androidx.compose.material3.AlertDialog
 
 class MainActivity : ComponentActivity() {
     private val relays: MutableList<Relay> = mutableListOf()
@@ -73,12 +75,12 @@ class MainActivity : ComponentActivity() {
     private var automaticStatus = mutableStateOf("Not started")
     private var cellularNetwork: Network? = null
     private var ethernetNetwork: Network? = null
-    private var areNotificationsAllowed = true
+    private var showingNotificationsNotAllowed = mutableStateOf(false)
     private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         isGranted: Boolean ->
-        areNotificationsAllowed = isGranted
         if (!isGranted) {
             logger.log("Notification permissions not granted. Stopping.")
+            showingNotificationsNotAllowed.value = true
             stopAutomatic()
             teardownManual()
         }
@@ -119,7 +121,6 @@ class MainActivity : ComponentActivity() {
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED -> {
-                areNotificationsAllowed = true
             }
             shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -143,7 +144,6 @@ class MainActivity : ComponentActivity() {
         if (automaticStarted) {
             return
         }
-        requestNotificationPermission()
         automaticStarted = true
         automaticButtonText.value = "Stop"
         startService(this)
@@ -157,6 +157,7 @@ class MainActivity : ComponentActivity() {
                 { streamerName -> runOnUiThread { handleStreamerLost(streamerName) } },
             )
         scanner?.start()
+        requestNotificationPermission()
         updateAutomaticStatus()
     }
 
@@ -225,11 +226,7 @@ class MainActivity : ComponentActivity() {
         automaticStatus.value =
 
             if (!automaticStarted) {
-                if (areNotificationsAllowed) {
-                    "Not started"
-                } else {
-                    "Notifications not allowed"
-                }
+                "Not started"
             } else if (cellularNetwork == null) {
                 "Waiting for cellular"
             } else if (totalCount > 0) {
@@ -271,8 +268,8 @@ class MainActivity : ComponentActivity() {
             startService(this)
             wakeLock.acquire()
         }
-        requestNotificationPermission()
         relay.start()
+        requestNotificationPermission()
     }
 
     private fun stopRelayManual(relay: Relay) {
