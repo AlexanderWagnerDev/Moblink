@@ -117,8 +117,8 @@ class MainActivity : ComponentActivity() {
         when {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
                 PackageManager.PERMISSION_GRANTED -> {
-                    completion(true)
-                }
+                completion(true)
+            }
             shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
                 requestPermissionCompletion = completion
                 requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -144,7 +144,8 @@ class MainActivity : ComponentActivity() {
             return
         }
         automaticStarted = true
-        requestNotificationPermission(completion = { isGranted: Boolean ->
+        requestNotificationPermission(
+            completion = { isGranted: Boolean ->
                 if (isGranted) {
                     automaticButtonText.value = "Stop"
                     startService(this)
@@ -163,7 +164,8 @@ class MainActivity : ComponentActivity() {
                     stopAutomatic()
                     showingNotificationsNotAllowedDialog.value = true
                 }
-        })
+            }
+        )
     }
 
     private fun stopAutomatic() {
@@ -272,18 +274,20 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startRelayManual(relay: Relay) {
-        requestNotificationPermission(completion = { isGranted: Boolean ->
-            if (isGranted) {
-                if (!isStartedManual()) {
-                    startService(this)
-                    wakeLock.acquire()
+        requestNotificationPermission(
+            completion = { isGranted: Boolean ->
+                if (isGranted) {
+                    if (!isStartedManual()) {
+                        startService(this)
+                        wakeLock.acquire()
+                    }
+                    relay.start()
+                } else {
+                    stopRelayManual(relay)
+                    showingNotificationsNotAllowedDialog.value = true
                 }
-                relay.start()
-            } else {
-                stopRelayManual(relay)
-                showingNotificationsNotAllowedDialog.value = true
             }
-        })
+        )
     }
 
     private fun stopRelayManual(relay: Relay) {
