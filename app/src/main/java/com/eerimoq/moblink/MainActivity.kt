@@ -40,7 +40,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -73,15 +75,15 @@ class MainActivity : ComponentActivity() {
     private var automaticStatus = mutableStateOf("Not started")
     private var cellularNetwork: Network? = null
     private var ethernetNetwork: Network? = null
-    private var showingNotificationsNotAllowed = mutableStateOf(false)
+    private var showingNotificationsNotAllowedDialog = mutableStateOf(false)
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean
             ->
             if (!isGranted) {
                 logger.log("Notification permissions not granted. Stopping.")
-                showingNotificationsNotAllowed.value = true
                 stopAutomatic()
                 stopRelays()
+                showingNotificationsNotAllowedDialog.value = true
             }
         }
 
@@ -380,9 +382,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Main() {
         var manual by remember { mutableStateOf(settings!!.database.manual!!) }
+        if (showingNotificationsNotAllowedDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showingNotificationsNotAllowedDialog.value = false },
+                confirmButton = {},
+                title = { Text("Notifications not allowed") },
+                text = {
+                    Text(
+                        "Notifications are needed for Moblink to run in background. Please allow them in Android settings."
+                    )
+                },
+            )
+        }
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
