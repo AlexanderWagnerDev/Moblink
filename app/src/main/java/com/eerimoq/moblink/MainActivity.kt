@@ -3,6 +3,7 @@ package com.eerimoq.moblink
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.ConnectivityManager.NetworkCallback
 import android.net.Network
@@ -56,6 +57,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.eerimoq.moblink.ui.theme.MoblinkTheme
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.os.Build
 
 class MainActivity : ComponentActivity() {
     private val relays: MutableList<Relay> = mutableListOf()
@@ -68,6 +73,16 @@ class MainActivity : ComponentActivity() {
     private var automaticStatus = mutableStateOf("Not started")
     private var cellularNetwork: Network? = null
     private var ethernetNetwork: Network? = null
+    private var areNotificationsAllowed = true
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        isGranted: Boolean ->
+        areNotificationsAllowed = isGranted
+        if (!isGranted) {
+            logger.log("Notification permissions not granted. Stopping.")
+            stopAutomatic()
+            teardownManual()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,6 +110,26 @@ class MainActivity : ComponentActivity() {
         requestNetwork(NetworkCapabilities.TRANSPORT_ETHERNET, createEthernetNetworkRequest())
     }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return
+        }
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                areNotificationsAllowed = true
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
     private fun modeChanged() {
         stopAutomatic()
         teardownManual()
@@ -108,6 +143,7 @@ class MainActivity : ComponentActivity() {
         if (automaticStarted) {
             return
         }
+        requestNotificationPermission()
         automaticStarted = true
         automaticButtonText.value = "Stop"
         startService(this)
@@ -187,8 +223,13 @@ class MainActivity : ComponentActivity() {
             relays.count { relay -> relay.uiStatus.value == "Connected to streamer" }
         val totalCount = relays.count()
         automaticStatus.value =
+
             if (!automaticStarted) {
-                "Not started"
+                if (areNotificationsAllowed) {
+                    "Not started"
+                } else {
+                    "Notifications not allowed"
+                }
             } else if (cellularNetwork == null) {
                 "Waiting for cellular"
             } else if (totalCount > 0) {
@@ -230,6 +271,7 @@ class MainActivity : ComponentActivity() {
             startService(this)
             wakeLock.acquire()
         }
+        requestNotificationPermission()
         relay.start()
     }
 
