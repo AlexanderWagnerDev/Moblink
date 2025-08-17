@@ -12,9 +12,9 @@ android {
     defaultConfig {
         applicationId = "com.eerimoq.moblink"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 39
-        versionName = "0.39.0"
+        targetSdk = 35
+        versionCode = 40
+        versionName = "0.40.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
