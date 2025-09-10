@@ -466,7 +466,7 @@ class MainActivity : ComponentActivity() {
         OutlinedTextField(
             value = nameInput,
             onValueChange = {
-                nameInput = it
+                nameInput = it.substringBefore("\n")
                 settings!!.database.name = nameInput
                 saveSettings()
             },
