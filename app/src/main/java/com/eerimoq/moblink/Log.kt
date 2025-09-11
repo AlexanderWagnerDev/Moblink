@@ -8,15 +8,28 @@ class Logger {
 
     fun log(message: String) {
         Log.i("Moblink", message)
-        if (log.size > 1000) {
-            log.removeFirst()
+        synchronized(this) {
+            if (log.size > 1000) {
+                log.removeFirst()
+            }
+            val timestamp = LocalDateTime.now()
+            log.add("$timestamp: $message")
         }
-        val timestamp = LocalDateTime.now()
-        log.add("$timestamp: $message")
     }
 
     fun formatLog(): String {
-        return log.joinToString("\n")
+        synchronized(this) {
+            return log.joinToString("\n")
+        }
+    }
+
+    fun makeSmaller() {
+        synchronized(this) {
+            val newSize = (log.size - 100).coerceAtLeast(0)
+            while (log.size > newSize) {
+                log.removeFirst()
+            }
+        }
     }
 }
 

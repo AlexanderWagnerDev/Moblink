@@ -304,8 +304,17 @@ class MainActivity : ComponentActivity() {
 
     private fun copyLogToClipboard() {
         val clipboard: ClipboardManager = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("log.txt", logger.formatLog())
-        clipboard.setPrimaryClip(clip)
+        while (true) {
+            try {
+                val clip = ClipData.newPlainText("log.txt", logger.formatLog())
+                clipboard.setPrimaryClip(clip)
+                break
+            } catch (e: android.os.TransactionTooLargeException) {
+                logger.makeSmaller()
+            } catch (e: java.lang.RuntimeException) {
+                break
+            }
+        }
     }
 
     private fun cellularNetworkUpdated() {
