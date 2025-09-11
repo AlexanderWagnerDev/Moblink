@@ -34,7 +34,7 @@ class Relay {
     private var connected = false
     private var wrongPassword = false
     private var onStatusUpdated: ((String) -> Unit)? = null
-    private var getBatteryPercentage: (((Int) -> Unit) -> Unit)? = null
+    private var getStatus: (((Int, ThermalState?) -> Unit) -> Unit)? = null
     private var reconnectSoonRunnable: Runnable? = null
     val uiButtonText = mutableStateOf("Start")
     val uiStatus = mutableStateOf("")
@@ -48,11 +48,11 @@ class Relay {
         password: String,
         name: String,
         onStatusUpdated: (String) -> Unit,
-        getBatteryPercentage: ((Int) -> Unit) -> Unit,
+        getStatus: ((Int, ThermalState?) -> Unit) -> Unit,
     ) {
         logger.log("$streamerUrl: Setup")
         this.onStatusUpdated = onStatusUpdated
-        this.getBatteryPercentage = getBatteryPercentage
+        this.getStatus = getStatus
         handlerThread.start()
         handler = Handler(handlerThread.looper)
         handler?.post {
@@ -298,10 +298,11 @@ class Relay {
     }
 
     private fun handleMessageStatus(id: Int) {
-        getBatteryPercentage?.let {
-            it { batteryPercentage ->
+        getStatus?.let {
+            it { batteryPercentage, thermalState ->
                 handler?.post {
-                    val data = ResponseData(null, StatusResponse(batteryPercentage))
+                    val data = ResponseData(null,
+                        StatusResponse(batteryPercentage, thermalState?.toString()?.lowercase()))
                     val response = Response(id, Result(Present(), null), data)
                     send(MessageToStreamer(null, response))
                 }

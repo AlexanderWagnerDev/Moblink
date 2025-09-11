@@ -14,6 +14,7 @@ import android.net.nsd.NsdManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -63,6 +64,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.eerimoq.moblink.ui.theme.MoblinkTheme
+
+enum class ThermalState {
+    WHITE,
+    YELLOW,
+    RED
+}
 
 class MainActivity : ComponentActivity() {
     private val relays: MutableList<Relay> = mutableListOf()
@@ -216,7 +223,7 @@ class MainActivity : ComponentActivity() {
                     updateAutomaticStatus()
                 }
             },
-            { callback -> runOnUiThread { getBatteryPercentage(callback) } },
+            { callback -> runOnUiThread { getStatus(callback) } },
         )
         relay.uiStreamerName = streamerName
         relay.uiStreamerUrl = streamerUrl
@@ -258,7 +265,7 @@ class MainActivity : ComponentActivity() {
                 relaySettings.password,
                 database.name,
                 { status -> runOnUiThread { relay.uiStatus.value = status } },
-                { callback -> runOnUiThread { getBatteryPercentage(callback) } },
+                { callback -> runOnUiThread { getStatus(callback) } },
             )
             relay.setDestinationNetwork(cellularNetwork)
             relays.add(relay)
@@ -342,9 +349,44 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun getBatteryPercentage(callback: (Int) -> Unit) {
+    private fun getStatus(callback: (Int, ThermalState?) -> Unit) {
+        callback(getBatteryPercentage(), getThermalState())
+    }
+
+    private fun getBatteryPercentage(): Int {
         val batteryManager = getSystemService(Context.BATTERY_SERVICE) as BatteryManager
-        callback(batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY))
+        return batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+    }
+
+    private fun getThermalState(): ThermalState? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return null
+        }
+        val powerManager = getSystemService(POWER_SERVICE) as PowerManager
+        when (powerManager.currentThermalStatus) {
+            PowerManager.THERMAL_STATUS_NONE -> {
+                return ThermalState.WHITE
+            }
+            PowerManager.THERMAL_STATUS_LIGHT -> {
+                return ThermalState.YELLOW
+            }
+            PowerManager.THERMAL_STATUS_MODERATE -> {
+                return ThermalState.YELLOW
+            }
+            PowerManager.THERMAL_STATUS_SEVERE -> {
+                return ThermalState.RED
+            }
+            PowerManager.THERMAL_STATUS_CRITICAL -> {
+                return ThermalState.RED
+            }
+            PowerManager.THERMAL_STATUS_EMERGENCY -> {
+                return ThermalState.RED
+            }
+            PowerManager.THERMAL_STATUS_SHUTDOWN -> {
+                return ThermalState.RED
+            }
+        }
+        return null
     }
 
     private fun requestNetwork(transportType: Int, networkCallback: NetworkCallback) {
@@ -425,7 +467,9 @@ class MainActivity : ComponentActivity() {
             )
         }
         Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -542,7 +586,9 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun StreamerDots(pagerState: PagerState) {
         Row(
-            Modifier.wrapContentHeight().fillMaxWidth(),
+            Modifier
+                .wrapContentHeight()
+                .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
             repeat(relays.count()) { relayIndex ->
@@ -551,7 +597,11 @@ class MainActivity : ComponentActivity() {
                     else MaterialTheme.colorScheme.inversePrimary
                 Box(
                     modifier =
-                        Modifier.padding(2.dp).clip(CircleShape).background(color).size(10.dp)
+                    Modifier
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .background(color)
+                        .size(10.dp)
                 )
             }
         }
