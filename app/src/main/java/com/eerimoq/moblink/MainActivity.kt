@@ -502,7 +502,7 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.padding(bottom = 15.dp),
             value = passwordInput,
             onValueChange = {
-                passwordInput = it
+                passwordInput = it.substringBefore("\n")
                 settings!!.database.automaticPassword = passwordInput
                 saveSettings()
             },
@@ -581,7 +581,7 @@ class MainActivity : ComponentActivity() {
         OutlinedTextField(
             value = streamerUrlInput,
             onValueChange = {
-                streamerUrlInput = it
+                streamerUrlInput = it.substringBefore("\n")
                 relaySettings.streamerUrl = streamerUrlInput
                 saveSettings()
             },
@@ -600,7 +600,7 @@ class MainActivity : ComponentActivity() {
             modifier = Modifier.padding(bottom = 15.dp),
             value = passwordInput,
             onValueChange = {
-                passwordInput = it
+                passwordInput = it.substringBefore("\n")
                 relaySettings.password = passwordInput
                 saveSettings()
             },
