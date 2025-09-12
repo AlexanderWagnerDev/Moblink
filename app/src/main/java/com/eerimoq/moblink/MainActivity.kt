@@ -57,9 +57,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -466,6 +472,19 @@ class MainActivity : ComponentActivity() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Moblink relay", modifier = Modifier.padding(top = 70.dp), fontSize = 30.sp)
+            Text(
+                buildAnnotatedString {
+                    append("- an extension to ")
+                    withLink(
+                        LinkAnnotation.Url(
+                            "https://apps.apple.com/app/id6466745933",
+                            TextLinkStyles(style = SpanStyle(color = Color.Blue)),
+                        )
+                    ) {
+                        append("Moblin")
+                    }
+                }
+            )
             AppIcon()
             NameField()
             Row(
