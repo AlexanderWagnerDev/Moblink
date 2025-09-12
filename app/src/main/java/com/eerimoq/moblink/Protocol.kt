@@ -23,7 +23,8 @@ data class RequestData(val startTunnel: StartTunnelRequest? = null, val status: 
 
 @Serializable data class StartTunnelResponse(val port: Int)
 
-@Serializable data class StatusResponse(val batteryPercentage: Int? = null, val thermalState: String? = null)
+@Serializable
+data class StatusResponse(val batteryPercentage: Int? = null, val thermalState: String? = null)
 
 @Serializable
 data class ResponseData(

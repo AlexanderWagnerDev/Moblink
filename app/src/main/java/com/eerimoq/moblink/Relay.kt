@@ -301,8 +301,11 @@ class Relay {
         getStatus?.let {
             it { batteryPercentage, thermalState ->
                 handler?.post {
-                    val data = ResponseData(null,
-                        StatusResponse(batteryPercentage, thermalState?.toString()?.lowercase()))
+                    val data =
+                        ResponseData(
+                            null,
+                            StatusResponse(batteryPercentage, thermalState?.toString()?.lowercase()),
+                        )
                     val response = Response(id, Result(Present(), null), data)
                     send(MessageToStreamer(null, response))
                 }

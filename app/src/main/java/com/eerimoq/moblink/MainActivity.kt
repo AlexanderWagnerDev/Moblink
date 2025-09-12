@@ -68,7 +68,7 @@ import com.eerimoq.moblink.ui.theme.MoblinkTheme
 enum class ThermalState {
     WHITE,
     YELLOW,
-    RED
+    RED,
 }
 
 class MainActivity : ComponentActivity() {
@@ -467,9 +467,7 @@ class MainActivity : ComponentActivity() {
             )
         }
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -586,9 +584,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun StreamerDots(pagerState: PagerState) {
         Row(
-            Modifier
-                .wrapContentHeight()
-                .fillMaxWidth(),
+            Modifier.wrapContentHeight().fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
             repeat(relays.count()) { relayIndex ->
@@ -597,11 +593,7 @@ class MainActivity : ComponentActivity() {
                     else MaterialTheme.colorScheme.inversePrimary
                 Box(
                     modifier =
-                    Modifier
-                        .padding(2.dp)
-                        .clip(CircleShape)
-                        .background(color)
-                        .size(10.dp)
+                        Modifier.padding(2.dp).clip(CircleShape).background(color).size(10.dp)
                 )
             }
         }
