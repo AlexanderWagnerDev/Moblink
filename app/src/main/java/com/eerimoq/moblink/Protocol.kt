@@ -1,5 +1,6 @@
 package com.eerimoq.moblink
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -24,7 +25,17 @@ data class RequestData(val startTunnel: StartTunnelRequest? = null, val status: 
 @Serializable data class StartTunnelResponse(val port: Int)
 
 @Serializable
-data class StatusResponse(val batteryPercentage: Int? = null, val thermalState: String? = null)
+enum class ThermalState {
+    @SerialName("white") WHITE,
+    @SerialName("yellow") YELLOW,
+    @SerialName("red") RED,
+}
+
+@Serializable
+data class StatusResponse(
+    val batteryPercentage: Int? = null,
+    val thermalState: ThermalState? = null,
+)
 
 @Serializable
 data class ResponseData(

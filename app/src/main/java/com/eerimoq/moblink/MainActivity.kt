@@ -65,12 +65,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.eerimoq.moblink.ui.theme.MoblinkTheme
 
-enum class ThermalState {
-    WHITE,
-    YELLOW,
-    RED,
-}
-
 class MainActivity : ComponentActivity() {
     private val relays: MutableList<Relay> = mutableListOf()
     private var settings: Settings? = null
