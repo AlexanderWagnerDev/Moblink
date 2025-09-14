@@ -471,7 +471,7 @@ class MainActivity : ComponentActivity() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("Moblink relay", modifier = Modifier.padding(top = 70.dp), fontSize = 30.sp)
+            Text("Moblink relay", fontSize = 30.sp)
             Text(
                 buildAnnotatedString {
                     append("- an extension to ")
