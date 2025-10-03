@@ -14,7 +14,7 @@ class RelaySettings {
 
 @Serializable
 class Database {
-    var relayId = UUID.randomUUID().toString()
+    var relayId = UUIDv7.randomUUID().toString()
     var name = randomName()
     var manual: Boolean? = false
     var automaticPassword: String? = "1234"

@@ -114,6 +114,8 @@ class MainActivity : ComponentActivity() {
         requestNetwork(NetworkCapabilities.TRANSPORT_CELLULAR, createCellularNetworkRequest())
         requestNetwork(NetworkCapabilities.TRANSPORT_WIFI, createWiFiNetworkRequest())
         requestNetwork(NetworkCapabilities.TRANSPORT_ETHERNET, createEthernetNetworkRequest())
+        logger.log("Version: $version")
+        logger.log("Relay id: ${settings!!.database.relayId}")
     }
 
     private fun requestNotificationPermission(completion: (Boolean) -> Unit) {
